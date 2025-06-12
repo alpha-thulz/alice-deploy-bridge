@@ -1,0 +1,6 @@
+.idea
+.idea/*
+.idea/**
+
+.env
+src/env.d.ts
