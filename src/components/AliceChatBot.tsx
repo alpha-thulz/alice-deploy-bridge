@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -128,7 +127,7 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
+          className="fixed bottom-6 right-6 h-16 w-16 rounded-full bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 z-50"
         >
           <MessageCircle className="h-8 w-8 text-white" />
         </Button>
@@ -136,16 +135,18 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
 
       {/* Chat Interface */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl border-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col">
-          <CardHeader className="pb-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl border-0 bg-zinc-900/95 backdrop-blur-sm z-50 flex flex-col">
+          <CardHeader className="pb-3 bg-primary text-white rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bot className="h-5 w-5" />
-                </div>
+                <img 
+                  src="https://www.mukuru.com/wp-content/uploads/2022/11/Mukuru-Logo-final.webp" 
+                  alt="Mukuru" 
+                  className="h-8 object-contain"
+                />
                 <div>
                   <CardTitle className="text-lg">Alice</CardTitle>
-                  <p className="text-sm text-purple-100">Your AI Deployment Assistant</p>
+                  <p className="text-sm text-white/80">Your AI Deployment Assistant</p>
                 </div>
               </div>
               <Button
@@ -168,25 +169,25 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
                   className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!message.isUser && (
-                    <div className="h-8 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                       <Bot className="h-4 w-4 text-white" />
                     </div>
                   )}
                   <div
                     className={`max-w-[80%] p-3 rounded-lg ${
                       message.isUser
-                        ? 'bg-blue-500 text-white rounded-br-none'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                        ? 'bg-zinc-800 text-gray-100 rounded-br-none'
+                        : 'bg-zinc-800 text-gray-100 rounded-bl-none'
                     }`}
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                    <p className={`text-xs mt-1 ${message.isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-1 ${message.isUser ? 'text-gray-400' : 'text-gray-400'}`}>
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   {message.isUser && (
-                    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-white" />
+                    <div className="h-8 w-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-gray-300" />
                     </div>
                   )}
                 </div>
@@ -195,14 +196,14 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3 justify-start">
-                  <div className="h-8 w-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="h-4 w-4 text-white" />
                   </div>
-                  <div className="bg-gray-100 text-gray-800 p-3 rounded-lg rounded-bl-none">
+                  <div className="bg-zinc-800 text-gray-100 p-3 rounded-lg rounded-bl-none">
                     <div className="flex space-x-1">
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce"></div>
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 </div>
@@ -211,19 +212,19 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
             </div>
 
             {/* Input */}
-            <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900 rounded-b-lg">
               <div className="flex gap-2">
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask Alice to deploy something..."
-                  className="flex-1 border-2 border-gray-200 focus:border-purple-400"
+                  className="flex-1 border-2 border-zinc-800 bg-zinc-900 text-gray-300 focus:border-primary placeholder:text-gray-500"
                 />
                 <Button
                   onClick={handleSendMessage}
                   disabled={!inputText.trim()}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  className="bg-primary hover:bg-primary/90 text-white"
                 >
                   <Send className="h-4 w-4" />
                 </Button>

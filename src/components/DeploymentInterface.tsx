@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -158,46 +157,50 @@ const DeploymentInterface = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-black p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-gray-900 flex items-center justify-center gap-3">
-            <Rocket className="h-10 w-10 text-blue-600" />
-            Alice Deployment Center
-          </h1>
-          <p className="text-lg text-gray-600">Deploy your code with confidence - Alice is here to help! 🚀</p>
+          <div className="flex items-center justify-center gap-4">
+            <img 
+              src="https://www.mukuru.com/wp-content/uploads/2022/11/Mukuru-Logo-final.webp" 
+              alt="Mukuru" 
+              className="h-12 object-contain"
+            />
+            <h1 className="text-4xl font-bold text-primary">Alice</h1>
+          </div>
+          <p className="text-lg text-gray-400">Deploy your code with confidence - Alice is here to help! 🚀</p>
         </div>
 
         {/* Main Interface */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+        <Card className="shadow-lg border border-[#FF6B00] bg-zinc-900/90 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-2xl text-center text-gray-800">Ready to Deploy?</CardTitle>
+            <CardTitle className="text-2xl text-center text-primary">Ready to Deploy?</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="deploy">Deploy</TabsTrigger>
-                <TabsTrigger value="steps">Steps</TabsTrigger>
-                <TabsTrigger value="logs">Logs</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mb-6 bg-zinc-800">
+                <TabsTrigger value="deploy" className="data-[state=active]:bg-primary data-[state=active]:text-white text-gray-300">Deploy</TabsTrigger>
+                <TabsTrigger value="steps" className="data-[state=active]:bg-primary data-[state=active]:text-white text-gray-300">Steps</TabsTrigger>
+                <TabsTrigger value="logs" className="data-[state=active]:bg-primary data-[state=active]:text-white text-gray-300">Logs</TabsTrigger>
               </TabsList>
 
               <TabsContent value="deploy" className="space-y-6">
                 {/* Branch Selection */}
                 <div className="space-y-3">
-                  <label className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                    <GitBranch className="h-5 w-5 text-blue-600" />
+                  <label className="text-lg font-semibold text-primary flex items-center gap-2">
+                    <GitBranch className="h-5 w-5 text-primary" />
                     Choose your branch
                   </label>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-1">
                       <Select value={selectedOrigin} onValueChange={setSelectedOrigin}>
-                        <SelectTrigger className="h-12 text-base border-2 border-blue-200 hover:border-blue-300 transition-colors">
+                        <SelectTrigger className="h-12 text-base border-2 border-zinc-800 hover:border-primary/50 transition-colors bg-zinc-900 text-gray-300">
                           <SelectValue placeholder="Origin" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-2 border-blue-200">
+                        <SelectContent className="bg-zinc-900 border-2 border-zinc-800">
                           {origins.map((origin) => (
-                            <SelectItem key={origin} value={origin} className="hover:bg-blue-50">
+                            <SelectItem key={origin} value={origin} className="hover:bg-zinc-800 text-gray-300">
                               {origin}
                             </SelectItem>
                           ))}
@@ -206,14 +209,14 @@ const DeploymentInterface = () => {
                     </div>
                     <div className="md:col-span-2">
                       <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                        <SelectTrigger className="h-12 text-base border-2 border-blue-200 hover:border-blue-300 transition-colors">
+                        <SelectTrigger className="h-12 text-base border-2 border-zinc-800 hover:border-primary/50 transition-colors bg-zinc-900 text-gray-300">
                           <SelectValue placeholder="Select a branch to deploy" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-2 border-blue-200">
+                        <SelectContent className="bg-zinc-900 border-2 border-zinc-800">
                           {branches.map((branch) => (
-                            <SelectItem key={branch} value={branch} className="hover:bg-blue-50">
+                            <SelectItem key={branch} value={branch} className="hover:bg-zinc-800 text-gray-300">
                               <div className="flex items-center gap-2">
-                                <GitBranch className="h-4 w-4" />
+                                <GitBranch className="h-4 w-4 text-primary" />
                                 {selectedOrigin}/{branch}
                               </div>
                             </SelectItem>
@@ -226,18 +229,18 @@ const DeploymentInterface = () => {
 
                 {/* Environment Selection */}
                 <div className="space-y-3">
-                  <label className="text-lg font-semibold text-gray-700">
+                  <label className="text-lg font-semibold text-primary">
                     Pick your staging environment
                   </label>
                   <Select value={selectedEnvironment} onValueChange={setSelectedEnvironment}>
-                    <SelectTrigger className="h-12 text-base border-2 border-green-200 hover:border-green-300 transition-colors">
+                    <SelectTrigger className="h-12 text-base border-2 border-zinc-800 hover:border-primary/50 transition-colors bg-zinc-900 text-gray-300">
                       <SelectValue placeholder="Where would you like to deploy?" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-2 border-green-200 max-h-60">
+                    <SelectContent className="bg-zinc-900 border-2 border-zinc-800 max-h-60">
                       {environments.map((env) => (
-                        <SelectItem key={env} value={env} className="hover:bg-green-50">
+                        <SelectItem key={env} value={env} className="hover:bg-zinc-800 text-gray-300">
                           <div className="flex items-center gap-2">
-                            <div className={`h-3 w-3 rounded-full ${env === 'ubt' ? 'bg-purple-400' : 'bg-green-400'}`} />
+                            <div className={`h-3 w-3 rounded-full ${env === 'ubt' ? 'bg-primary' : 'bg-primary/60'}`} />
                             {env}
                           </div>
                         </SelectItem>
@@ -248,14 +251,14 @@ const DeploymentInterface = () => {
 
                 {/* Lock Message */}
                 {isLocked && (
-                  <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+                  <div className="bg-primary/10 border-2 border-primary/20 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                        <Unlock className="h-4 w-4 text-orange-600" />
+                      <div className="h-8 w-8 bg-primary/20 rounded-full flex items-center justify-center">
+                        <Unlock className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-orange-800">Deployment Locked</h3>
-                        <p className="text-orange-700">{lockReason}</p>
+                        <h3 className="font-semibold text-primary">Deployment Locked</h3>
+                        <p className="text-primary/80">{lockReason}</p>
                       </div>
                     </div>
                   </div>
@@ -266,7 +269,7 @@ const DeploymentInterface = () => {
                   {isLocked ? (
                     <Button
                       onClick={handleRelease}
-                      className="h-14 px-8 text-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
+                      className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-105"
                     >
                       <Unlock className="h-5 w-5 mr-2" />
                       Release Lock
@@ -275,7 +278,7 @@ const DeploymentInterface = () => {
                     <Button
                       onClick={handleDeploy}
                       disabled={!selectedBranch || !selectedEnvironment || isDeploying}
-                      className="h-14 px-8 text-lg bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     >
                       {isDeploying ? (
                         <>
@@ -295,29 +298,29 @@ const DeploymentInterface = () => {
                 {/* Progress Bar */}
                 {isDeploying && (
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm text-gray-600">
+                    <div className="flex justify-between text-sm text-gray-400">
                       <span>Deployment Progress</span>
                       <span>{Math.round(deploymentProgress)}%</span>
                     </div>
-                    <Progress value={deploymentProgress} className="h-3" />
+                    <Progress value={deploymentProgress} className="h-3 bg-zinc-800 [&>div]:bg-primary" />
                   </div>
                 )}
               </TabsContent>
 
               <TabsContent value="steps" className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Deployment Steps</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Deployment Steps</h3>
                 <div className="space-y-3">
                   {deploymentSteps.map((step, index) => (
                     <div
                       key={step.id}
-                      className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 bg-white transition-all ${
                         step.status === 'running'
-                          ? 'border-blue-200 bg-blue-50'
+                          ? 'border-blue-200'
                           : step.status === 'completed'
-                          ? 'border-green-200 bg-green-50'
+                          ? 'border-green-200'
                           : step.status === 'failed'
-                          ? 'border-red-200 bg-red-50'
-                          : 'border-gray-200 bg-gray-50'
+                          ? 'border-red-200'
+                          : 'border-gray-200'
                       }`}
                     >
                       <div className="flex-shrink-0">
@@ -338,7 +341,7 @@ const DeploymentInterface = () => {
               </TabsContent>
 
               <TabsContent value="logs" className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Deployment History</h3>
+                <h3 className="text-xl font-semibold text-white mb-4">Deployment History</h3>
                 <div className="space-y-3">
                   {deploymentLogs.map((log) => (
                     <div
