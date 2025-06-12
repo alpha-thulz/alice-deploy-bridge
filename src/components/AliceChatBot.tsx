@@ -2,32 +2,76 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { MessageCircle, Send, X, Bot, User } from 'lucide-react';
+import { MessageCircle, Send, X, Bot, User, GitBranch, Server } from 'lucide-react';
+import { startChat, sendMessage } from '@/services/gemini';
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  suggestions?: string[];
 }
 
 interface AliceChatBotProps {
   onDeploy: (branch: string, environment: string) => void;
 }
 
+const AVAILABLE_BRANCHES = [
+  'main',
+  'develop',
+  'feature-auth',
+  'feature-dashboard',
+  'fix-payment-bug',
+  'hotfix-security'
+];
+
+const AVAILABLE_ENVIRONMENTS = [
+  ...Array.from({ length: 14 }, (_, i) => `staging-${i + 1}`),
+  'ubt'
+];
+
+const INITIAL_PROMPT = `Hi there! I'm Alice, your deployment assistant! 👋
+
+I can help you deploy code to our staging environments. You can:
+• Deploy a branch to a staging environment
+• Ask about available branches
+• Ask about staging environments
+
+What would you like to do?`;
+
 const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi there! I'm Alice, your friendly deployment assistant! 👋 I can help you deploy your code with simple commands like 'Deploy feature-auth to staging-3' or answer any questions you have. How can I help you today?",
+      text: INITIAL_PROMPT,
       isUser: false,
-      timestamp: new Date()
+      timestamp: new Date(),
+      suggestions: ['Show available branches', 'Show staging environments', 'Help me deploy']
     }
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chatSession, setChatSession] = useState<any>(null);
+
+  useEffect(() => {
+    const initChat = async () => {
+      try {
+        console.log('Initializing chat...');
+        const session = await startChat();
+        console.log('Chat session created successfully');
+        setChatSession(session);
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+        addMessage(`Error initializing chat: ${error.message}`, false);
+      }
+    };
+    initChat();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,81 +81,112 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
     scrollToBottom();
   }, [messages]);
 
-  const addMessage = (text: string, isUser: boolean) => {
+  const addMessage = (text: string, isUser: boolean, suggestions?: string[]) => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text,
       isUser,
-      timestamp: new Date()
+      timestamp: new Date(),
+      suggestions
     };
     setMessages(prev => [...prev, newMessage]);
   };
 
-  const parseDeploymentCommand = (text: string) => {
-    const deployPattern = /deploy\s+([^\s]+)\s+to\s+([^\s]+)/i;
-    const match = text.match(deployPattern);
-    
-    if (match) {
-      const branch = match[1];
-      const environment = match[2];
-      return { branch, environment };
-    }
-    return null;
-  };
+  const handleSuggestionClick = async (suggestion: string) => {
+    addMessage(suggestion, true);
+    setIsTyping(true);
 
-  const generateAliceResponse = (userMessage: string) => {
-    const lowerMessage = userMessage.toLowerCase();
-    
-    // Check for deployment command
-    const deploymentCommand = parseDeploymentCommand(userMessage);
-    if (deploymentCommand) {
-      onDeploy(deploymentCommand.branch, deploymentCommand.environment);
-      return `Perfect! I've set up the deployment for you. I'll deploy ${deploymentCommand.branch} to ${deploymentCommand.environment}. Just click the Deploy button when you're ready! 🚀`;
+    let response = '';
+    let nextSuggestions: string[] = [];
+
+    // Handle branch selection
+    if (AVAILABLE_BRANCHES.includes(suggestion)) {
+      setSelectedBranch(suggestion);
+      response = `Great! You've selected the branch '${suggestion}'. Now, which environment should we deploy to?`;
+      nextSuggestions = AVAILABLE_ENVIRONMENTS;
+    }
+    // Handle environment selection
+    else if (AVAILABLE_ENVIRONMENTS.includes(suggestion) && selectedBranch) {
+      setSelectedEnvironment(suggestion);
+      response = `Perfect! I'm setting up the deployment of '${selectedBranch}' to '${suggestion}'. Click the Deploy button when you're ready! 🚀`;
+      nextSuggestions = ['Start new deployment'];
+      onDeploy(selectedBranch, suggestion);
+      // Reset selections after deployment is set up
+      setSelectedBranch(null);
+      setSelectedEnvironment(null);
+    }
+    // Handle command suggestions
+    else {
+      switch (suggestion.toLowerCase()) {
+        case 'show available branches':
+          response = `Here are the available branches:\n\n${AVAILABLE_BRANCHES.map(branch => `• ${branch}`).join('\n')}`;
+          nextSuggestions = [...AVAILABLE_BRANCHES, 'Show staging environments'];
+          break;
+        case 'show staging environments':
+          response = `Here are the available environments:\n\n${AVAILABLE_ENVIRONMENTS.map(env => `• ${env}`).join('\n')}`;
+          nextSuggestions = ['Help me deploy', 'Show available branches'];
+          break;
+        case 'help me deploy':
+          response = "Let's start the deployment process! Which branch would you like to deploy?";
+          nextSuggestions = AVAILABLE_BRANCHES;
+          break;
+        case 'start new deployment':
+          response = "Let's start a new deployment! Which branch would you like to deploy?";
+          nextSuggestions = AVAILABLE_BRANCHES;
+          setSelectedBranch(null);
+          setSelectedEnvironment(null);
+          break;
+        default:
+          response = "I'm not sure what you'd like to do. Would you like to see the available branches or environments?";
+          nextSuggestions = ['Show available branches', 'Show staging environments', 'Help me deploy'];
+      }
     }
 
-    // Help responses
-    if (lowerMessage.includes('help') || lowerMessage.includes('how')) {
-      return "I'm here to make deployments super easy! You can:\n\n• Tell me 'Deploy [branch-name] to [environment]' and I'll set it up for you\n• Ask about deployment status or history\n• Get help with any deployment questions\n\nTry saying something like 'Deploy main to staging-1' and watch the magic happen! ✨";
-    }
-
-    if (lowerMessage.includes('status') || lowerMessage.includes('deployment')) {
-      return "Great question! You can check the current deployment status in the Steps tab, and see all deployment history in the Logs tab. Is there a specific deployment you'd like to know about? 📊";
-    }
-
-    if (lowerMessage.includes('environment') || lowerMessage.includes('staging')) {
-      return "We have staging environments from staging-1 to staging-14, plus a special 'ubt' environment. Each one is ready for your deployments! Which environment would you like to use? 🏗️";
-    }
-
-    if (lowerMessage.includes('branch')) {
-      return "I can help you deploy any branch! Just tell me which one you'd like to deploy. For example, say 'Deploy feature-auth to staging-3' and I'll get everything ready for you! 🌿";
-    }
-
-    if (lowerMessage.includes('thanks') || lowerMessage.includes('thank you')) {
-      return "You're so welcome! I'm always happy to help make your deployments smooth and stress-free. Is there anything else you'd like to deploy? 😊";
-    }
-
-    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
-      return "Hello! Great to see you again! Ready to deploy something awesome today? Just let me know what branch and environment you'd like to use! 👋";
-    }
-
-    // Default response
-    return "I'm not quite sure about that, but I'm always learning! I'm best at helping with deployments - try telling me something like 'Deploy feature-x to staging-2' and I'll set it up for you right away! 🤖";
+    setTimeout(() => {
+      addMessage(response, false, nextSuggestions);
+      setIsTyping(false);
+    }, 500);
   };
 
   const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !chatSession) return;
 
     const userMessage = inputText.trim();
     addMessage(userMessage, true);
     setInputText('');
     setIsTyping(true);
 
-    // Simulate Alice thinking
-    setTimeout(() => {
-      const response = generateAliceResponse(userMessage);
-      addMessage(response, false);
+    try {
+      // Get response from Gemini with context about deployment
+      const contextMessage = `You are Alice, a deployment assistant. You can only help with deployments and must stay focused on that. 
+Current state: ${selectedBranch ? `Selected branch: ${selectedBranch}` : 'No branch selected'}
+${selectedEnvironment ? `Selected environment: ${selectedEnvironment}` : 'No environment selected'}
+Available branches: ${AVAILABLE_BRANCHES.join(', ')}
+Available environments: ${AVAILABLE_ENVIRONMENTS.join(', ')}
+
+User message: ${userMessage}
+
+Respond naturally but keep the focus on deployments. If they ask about anything not related to deployments, branches, or environments, politely redirect them to deployment-related topics.`;
+
+      const response = await sendMessage(chatSession, contextMessage);
+      let suggestions = ['Show available branches', 'Show staging environments', 'Help me deploy'];
+      
+      // If we're in the middle of a deployment flow, show relevant suggestions
+      if (selectedBranch && !selectedEnvironment) {
+        suggestions = AVAILABLE_ENVIRONMENTS;
+      } else if (!selectedBranch) {
+        suggestions = [...suggestions, ...AVAILABLE_BRANCHES];
+      }
+      
+      addMessage(response, false, suggestions);
+    } catch (error) {
+      console.error('Error in chat:', error);
+      const errorMessage = error.message || "Unknown error occurred";
+      addMessage(`I apologize, but I encountered an error: ${errorMessage}. Please try again.`, false, 
+        ['Show available branches', 'Show staging environments', 'Help me deploy']);
+    } finally {
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -123,7 +198,6 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
 
   return (
     <>
-      {/* Floating Chat Button */}
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
@@ -133,16 +207,15 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
         </Button>
       )}
 
-      {/* Chat Interface */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl border-0 bg-zinc-900/95 backdrop-blur-sm z-50 flex flex-col">
-          <CardHeader className="pb-3 bg-primary text-white rounded-t-lg">
+        <Card className="fixed bottom-6 right-6 w-96 h-[32rem] shadow-2xl border-0 bg-zinc-900/95 backdrop-blur-sm z-50 flex flex-col overflow-hidden">
+          <CardHeader className="pb-3 bg-primary text-white rounded-t-lg flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <img 
-                  src="https://www.mukuru.com/wp-content/uploads/2022/11/Mukuru-Logo-final.webp" 
+                  src="/mukuru-logo.png" 
                   alt="Mukuru" 
-                  className="h-8 object-contain"
+                  className="h-8 object-contain brightness-0 invert"
                 />
                 <div>
                   <CardTitle className="text-lg">Alice</CardTitle>
@@ -160,40 +233,58 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
             </div>
           </CardHeader>
 
-          <CardContent className="flex-1 p-0 flex flex-col">
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-zinc-800">
               {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!message.isUser && (
-                    <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-white" />
+                <div key={message.id} className="space-y-4">
+                  <div className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                    {!message.isUser && (
+                      <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[80%] p-3 rounded-lg ${
+                        message.isUser
+                          ? 'bg-zinc-800 text-gray-100 rounded-br-none'
+                          : 'bg-zinc-800 text-gray-100 rounded-bl-none'
+                      }`}
+                    >
+                      <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                      <p className={`text-xs mt-1 ${message.isUser ? 'text-gray-400' : 'text-gray-400'}`}>
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                  )}
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
-                      message.isUser
-                        ? 'bg-zinc-800 text-gray-100 rounded-br-none'
-                        : 'bg-zinc-800 text-gray-100 rounded-bl-none'
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                    <p className={`text-xs mt-1 ${message.isUser ? 'text-gray-400' : 'text-gray-400'}`}>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    {message.isUser && (
+                      <div className="h-8 w-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-4 w-4 text-gray-300" />
+                      </div>
+                    )}
                   </div>
-                  {message.isUser && (
-                    <div className="h-8 w-8 bg-zinc-800 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-gray-300" />
+
+                  {!message.isUser && message.suggestions && message.suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pl-11">
+                      {message.suggestions.map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="bg-zinc-800 text-gray-300 border-zinc-700 hover:bg-zinc-700 hover:text-white"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                          {AVAILABLE_BRANCHES.includes(suggestion) ? (
+                            <GitBranch className="h-3 w-3 mr-1" />
+                          ) : AVAILABLE_ENVIRONMENTS.includes(suggestion) ? (
+                            <Server className="h-3 w-3 mr-1" />
+                          ) : null}
+                          {suggestion}
+                        </Button>
+                      ))}
                     </div>
                   )}
                 </div>
               ))}
               
-              {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3 justify-start">
                   <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
@@ -211,26 +302,25 @@ const AliceChatBot: React.FC<AliceChatBotProps> = ({ onDeploy }) => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
-            <div className="p-4 border-t border-zinc-800 bg-zinc-900 rounded-b-lg">
+            <div className="p-4 border-t border-zinc-800 bg-zinc-900 rounded-b-lg flex-shrink-0">
               <div className="flex gap-2">
                 <Input
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask Alice to deploy something..."
+                  placeholder="Ask about deployments..."
                   className="flex-1 border-2 border-zinc-800 bg-zinc-900 text-gray-300 focus:border-primary placeholder:text-gray-500"
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputText.trim()}
+                  disabled={!inputText.trim() || !chatSession}
                   className="bg-primary hover:bg-primary/90 text-white"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2 text-center">
-                Try: "Deploy feature-auth to staging-3"
+                Try: "Show me available branches"
               </p>
             </div>
           </CardContent>

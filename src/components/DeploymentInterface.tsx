@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Badge, badgeVariants } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { GitBranch, Rocket, Clock, User, CheckCircle, XCircle, Loader, Unlock } from 'lucide-react';
 import { AliceChatBot } from './AliceChatBot';
+import { cn } from '@/lib/utils';
 
 interface DeploymentLog {
   id: string;
@@ -163,7 +164,7 @@ const DeploymentInterface = () => {
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-4">
             <img 
-              src="https://www.mukuru.com/wp-content/uploads/2022/11/Mukuru-Logo-final.webp" 
+              src="/mukuru-logo.png" 
               alt="Mukuru" 
               className="h-12 object-contain"
             />

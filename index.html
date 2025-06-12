@@ -15,6 +15,25 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: 'hsl(24 100% 50%)',
+              secondary: 'hsl(207 100% 35%)',
+              accent: 'hsl(147 100% 35%)',
+              background: 'hsl(0 0% 100%)',
+              foreground: 'hsl(0 0% 20%)',
+            }
+          }
+        },
+        darkMode: 'class'
+      }
+    </script>
   </head>
 
   <body>
